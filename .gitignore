@@ -8,3 +8,5 @@ dist/
 .cache/
 .ruff_cache/
 .claude/
+.claude/
+.env.local
