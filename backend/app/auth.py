@@ -7,8 +7,8 @@ from app.config import settings
 security = HTTPBearer()
 
 
-def create_token(user_id: int) -> str:
-    payload = {"sub": str(user_id)}
+def create_token(user_id: int, role: str = "user") -> str:
+    payload = {"sub": str(user_id), "role": role}
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
