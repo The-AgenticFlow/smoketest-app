@@ -1,4 +1,5 @@
 import jwt
+from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -8,7 +9,8 @@ security = HTTPBearer()
 
 
 def create_token(user_id: int, role: str = "user") -> str:
-    payload = {"sub": str(user_id), "role": role}
+    expiry = datetime.utcnow() + timedelta(minutes=15)
+    payload = {"sub": str(user_id), "role": role, "exp": expiry}
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
