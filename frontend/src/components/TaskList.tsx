@@ -8,6 +8,10 @@ interface TaskListProps {
 }
 
 export default function TaskList({ tasks, onToggle, onDelete }: TaskListProps) {
+  if (tasks.length === 0) {
+    return <div className="empty">No tasks yet</div>;
+  }
+
   return (
     <ul className="task-list">
       {tasks.map((task) => (
