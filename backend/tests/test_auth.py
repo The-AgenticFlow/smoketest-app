@@ -1,7 +1,7 @@
 import jwt
 import pytest
 
-from app.auth import create_token, verify_token, require_admin
+from app.auth import create_token
 from app.config import settings
 
 
@@ -43,5 +43,5 @@ def test_user_token_fails_require_admin():
 
 
 def test_invalid_token_rejected():
-    with pytest.raises(Exception):
+    with pytest.raises(jwt.InvalidTokenError):
         jwt.decode("invalid.token.here", settings.secret_key, algorithms=[settings.algorithm])
