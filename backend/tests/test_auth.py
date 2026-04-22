@@ -1,7 +1,7 @@
 import jwt
 import pytest
 
-from app.auth import create_token, verify_token
+from app.auth import create_token
 from app.config import settings
 
 
@@ -18,13 +18,30 @@ def test_token_expiry():
 
 
 def test_admin_check_missing_role():
-    """BUG: create_token doesn't include 'role' in payload,
-    so require_admin always rejects. This test documents the bug."""
+    """Role should now be included in token payload with default value 'user'"""
     token = create_token(user_id=1)
     payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-    assert "role" not in payload
+    assert "role" in payload
+    assert payload["role"] == "user"
+
+
+def test_admin_token_passes_require_admin():
+    """Admin token should have role='admin' in payload"""
+    token = create_token(user_id=1, role="admin")
+    payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    assert "role" in payload
+    assert payload["role"] == "admin"
+
+
+def test_user_token_fails_require_admin():
+    """User token should have role='user' in payload (not admin)"""
+    token = create_token(user_id=1, role="user")
+    payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    assert "role" in payload
+    assert payload["role"] == "user"
+    assert payload["role"] != "admin"
 
 
 def test_invalid_token_rejected():
-    with pytest.raises(Exception):
+    with pytest.raises(jwt.InvalidTokenError):
         jwt.decode("invalid.token.here", settings.secret_key, algorithms=[settings.algorithm])
