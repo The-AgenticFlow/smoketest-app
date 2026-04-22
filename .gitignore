@@ -7,3 +7,5 @@ dist/
 *.egg-info/
 .cache/
 .ruff_cache/
+.claude/
+.env.local
