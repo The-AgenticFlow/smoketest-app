@@ -1,10 +1,11 @@
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy import func, select
 
 from app.cache import cache
 from app.models import Task
+from app.sanitization import strip_html
 
 router = APIRouter()
 
@@ -17,12 +18,82 @@ class TaskCreate(BaseModel):
     priority: str = "medium"
     completed: bool = False
 
+    @field_validator('title')
+    @classmethod
+    def validate_title(cls, v):
+        """Strip HTML, check for empty, check max length."""
+        if v is None:
+            raise ValueError('title cannot be None')
+
+        # Strip HTML tags
+        cleaned = strip_html(v)
+
+        # Strip whitespace
+        cleaned = cleaned.strip()
+
+        # Check for empty title
+        if not cleaned:
+            raise ValueError('title cannot be empty')
+
+        # Check max length (255 characters)
+        if len(cleaned) > 255:
+            raise ValueError('title cannot exceed 255 characters')
+
+        return cleaned
+
+    @field_validator('description')
+    @classmethod
+    def validate_description(cls, v):
+        """Strip HTML tags from description."""
+        if v is None:
+            return v
+
+        # Strip HTML tags
+        cleaned = strip_html(v)
+
+        return cleaned
+
 
 class TaskUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
     completed: bool | None = None
     priority: str | None = None
+
+    @field_validator('title')
+    @classmethod
+    def validate_title(cls, v):
+        """Strip HTML, check for empty, check max length."""
+        if v is None:
+            return v
+
+        # Strip HTML tags
+        cleaned = strip_html(v)
+
+        # Strip whitespace
+        cleaned = cleaned.strip()
+
+        # Check for empty title
+        if not cleaned:
+            raise ValueError('title cannot be empty')
+
+        # Check max length (255 characters)
+        if len(cleaned) > 255:
+            raise ValueError('title cannot exceed 255 characters')
+
+        return cleaned
+
+    @field_validator('description')
+    @classmethod
+    def validate_description(cls, v):
+        """Strip HTML tags from description."""
+        if v is None:
+            return v
+
+        # Strip HTML tags
+        cleaned = strip_html(v)
+
+        return cleaned
 
 
 class TaskResponse(BaseModel):
