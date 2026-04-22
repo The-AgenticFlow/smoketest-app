@@ -24,7 +24,6 @@ async def test_create_task_xss_script_tag_blocked(client):
 async def test_create_task_xss_img_onerror_blocked(client):
     """Test that image onerror attributes are stripped from title."""
     xss_payload = '<img onerror=alert(1) src=x>'
-    expected_cleaned = ''
 
     resp = await client.post(
         "/api/v1/tasks",
@@ -55,7 +54,6 @@ async def test_create_task_xss_body_onload_blocked(client):
 async def test_create_task_xss_iframe_javascript_blocked(client):
     """Test that iframe javascript URLs are stripped from title."""
     xss_payload = '<iframe src="javascript:alert(1)">'
-    expected_cleaned = ''
 
     resp = await client.post(
         "/api/v1/tasks",
@@ -347,4 +345,5 @@ async def test_create_task_html_entities_preserved(client):
     data = resp.json()
     # The entities should be handled (either decoded or stripped as tags)
     # We primarily care that no actual tags remain
-    assert "<angle brackets>" not in data["title"] or data["title"] == "Task with <angle brackets> and & ampersand"
+    assert "<angle brackets>" not in data["title"] or \
+        data["title"] == "Task with <angle brackets> and & ampersand"
