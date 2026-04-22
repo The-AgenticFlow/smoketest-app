@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.cache import CacheBackend, cache
+from app.cache import CacheBackend
 
 
 @pytest.fixture
@@ -129,7 +129,9 @@ class TestCacheBackend:
         mock_redis_client.ping.assert_called_once()
 
     @pytest.mark.anyio
-    async def test_health_check_returns_false_when_unreachable(self, cache_backend, mock_redis_client):
+    async def test_health_check_returns_false_when_unreachable(
+        self, cache_backend, mock_redis_client
+    ):
         """Test health_check() returns False when Redis ping fails."""
         # Setup
         mock_redis_client.ping.side_effect = Exception("Connection refused")

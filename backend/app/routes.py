@@ -2,9 +2,12 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 
+from app.cache import cache
 from app.models import Task
 
 router = APIRouter()
+
+CACHE_KEY_TASKS_ALL = "tasks:all"
 
 
 class TaskCreate(BaseModel):
@@ -34,9 +37,19 @@ class TaskResponse(BaseModel):
 async def list_tasks():
     from app.main import app
 
+    # Check cache first
+    cached = await cache.get(CACHE_KEY_TASKS_ALL)
+    if cached is not None:
+        # Return cached data directly
+        return cached
+
+    # Cache miss - fetch from database
     async with app.state.db_session() as session:
         result = await session.execute(select(Task).order_by(Task.id))
-        return result.scalars().all()
+        tasks = result.scalars().all()
+        task_list = [TaskResponse.model_validate(t).model_dump() for t in tasks]
+        await cache.set(CACHE_KEY_TASKS_ALL, task_list, ttl=300)
+        return task_list
 
 
 @router.post("/tasks", response_model=TaskResponse, status_code=201)
@@ -52,6 +65,8 @@ async def create_task(payload: TaskCreate):
         session.add(task)
         await session.commit()
         await session.refresh(task)
+        # Invalidate cache after creating task
+        await cache.delete(CACHE_KEY_TASKS_ALL)
         return task
 
 
@@ -78,6 +93,8 @@ async def update_task(task_id: int, payload: TaskUpdate):
             setattr(task, field, value)
         await session.commit()
         await session.refresh(task)
+        # Invalidate cache after updating task
+        await cache.delete(CACHE_KEY_TASKS_ALL)
         return task
 
 
@@ -91,3 +108,5 @@ async def delete_task(task_id: int):
             raise HTTPException(status_code=404, detail="Task not found")
         await session.delete(task)
         await session.commit()
+        # Invalidate cache after deleting task
+        await cache.delete(CACHE_KEY_TASKS_ALL)
