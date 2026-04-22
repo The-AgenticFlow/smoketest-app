@@ -21,6 +21,13 @@ const mockTasks: Task[] = [
 ];
 
 describe("TaskList", () => {
+  it("renders empty state when no tasks", () => {
+    render(
+      <TaskList tasks={[]} onToggle={vi.fn()} onDelete={vi.fn()} />
+    );
+    expect(screen.getByText("No tasks yet")).toBeInTheDocument();
+  });
+
   it("renders list of tasks", () => {
     render(
       <TaskList tasks={mockTasks} onToggle={vi.fn()} onDelete={vi.fn()} />
@@ -29,11 +36,18 @@ describe("TaskList", () => {
     expect(screen.getByText("Task 2")).toBeInTheDocument();
   });
 
-  it("renders empty state when no tasks", () => {
-    render(
-      <TaskList tasks={[]} onToggle={vi.fn()} onDelete={vi.fn()} />
+  it("renders correct number of TaskItem children", () => {
+    const threeTasks: Task[] = [
+      { id: 1, title: "Task 1", description: null, completed: false, priority: "medium" },
+      { id: 2, title: "Task 2", description: null, completed: false, priority: "medium" },
+      { id: 3, title: "Task 3", description: null, completed: false, priority: "medium" },
+    ];
+
+    const { container } = render(
+      <TaskList tasks={threeTasks} onToggle={vi.fn()} onDelete={vi.fn()} />
     );
-    expect(screen.getByText("No tasks yet")).toBeInTheDocument();
+    const listItems = container.querySelectorAll("li");
+    expect(listItems.length).toBe(3);
   });
 
   it("propagates onToggle callback from task item", () => {
@@ -60,5 +74,13 @@ describe("TaskList", () => {
       <TaskList tasks={mockTasks} onToggle={vi.fn()} onDelete={vi.fn()} />
     );
     expect(screen.getByRole("list")).toHaveClass("task-list");
+  });
+
+  it("renders ul with task-list class", () => {
+    const { container } = render(
+      <TaskList tasks={mockTasks} onToggle={vi.fn()} onDelete={vi.fn()} />
+    );
+    const list = container.querySelector("ul.task-list");
+    expect(list).toBeInTheDocument();
   });
 });
