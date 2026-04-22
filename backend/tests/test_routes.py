@@ -117,10 +117,22 @@ async def test_list_tasks_filter_by_priority(client):
 async def test_list_tasks_combined_filters(client):
     """Test combining completed and priority filters"""
     # Create test data with combinations
-    await client.post("/api/v1/tasks", json={"title": "High Done", "priority": "high", "completed": True})
-    await client.post("/api/v1/tasks", json={"title": "High Pending", "priority": "high", "completed": False})
-    await client.post("/api/v1/tasks", json={"title": "Low Done", "priority": "low", "completed": True})
-    await client.post("/api/v1/tasks", json={"title": "Low Pending", "priority": "low", "completed": False})
+    await client.post(
+        "/api/v1/tasks",
+        json={"title": "High Done", "priority": "high", "completed": True}
+    )
+    await client.post(
+        "/api/v1/tasks",
+        json={"title": "High Pending", "priority": "high", "completed": False}
+    )
+    await client.post(
+        "/api/v1/tasks",
+        json={"title": "Low Done", "priority": "low", "completed": True}
+    )
+    await client.post(
+        "/api/v1/tasks",
+        json={"title": "Low Pending", "priority": "low", "completed": False}
+    )
 
     # Both filters: completed=false AND priority=high
     resp = await client.get("/api/v1/tasks?completed=false&priority=high")

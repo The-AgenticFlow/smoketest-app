@@ -1,8 +1,7 @@
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 
 from app.models import Task
 
@@ -13,6 +12,7 @@ class TaskCreate(BaseModel):
     title: str
     description: str | None = None
     priority: str = "medium"
+    completed: bool = False
 
 
 class TaskUpdate(BaseModel):
@@ -41,8 +41,8 @@ class PaginatedTaskResponse(BaseModel):
 
 @router.get("/tasks", response_model=PaginatedTaskResponse)
 async def list_tasks(
-    completed: Optional[bool] = None,
-    priority: Optional[str] = None,
+    completed: bool | None = None,
+    priority: str | None = None,
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0)
 ):
@@ -85,6 +85,7 @@ async def create_task(payload: TaskCreate):
             title=payload.title,
             description=payload.description,
             priority=payload.priority,
+            completed=payload.completed,
         )
         session.add(task)
         await session.commit()
