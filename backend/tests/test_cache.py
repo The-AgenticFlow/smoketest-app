@@ -165,19 +165,42 @@ class TestCacheIntegration:
     @patch("app.routes.cache")
     async def test_list_tasks_uses_cache_on_hit(self, mock_cache):
         """Test that list_tasks returns cached data when available."""
-        # Setup mock cache with data
-        cached_data = [{"id": 1, "title": "Cached Task", "completed": False, "priority": "medium"}]
+        # Setup mock cache with data - must be PaginatedTaskResponse format (dict)
+        cached_data = {
+            "items": [
+                {
+                    "id": 1,
+                    "title": "Cached Task",
+                    "description": None,
+                    "completed": False,
+                    "priority": "medium",
+                }
+            ],
+            "total": 1,
+            "limit": 50,
+            "offset": 0,
+        }
         mock_cache.get = AsyncMock(return_value=cached_data)
         mock_cache.set = AsyncMock(return_value=True)
 
         # Call list_tasks - should return cached data without hitting DB
         result = await list_tasks()
 
-        # Verify cache was checked
-        mock_cache.get.assert_called_once_with(CACHE_KEY_TASKS_ALL)
+        # Verify cache was checked (don't verify exact key format as it depends on Query internals)
+        mock_cache.get.assert_called_once()
+        # Verify the key starts with the expected prefix
+        call_args = mock_cache.get.call_args[0][0]
+        assert call_args.startswith(f"{CACHE_KEY_TASKS_ALL}:None:None:")
 
-        # Verify result is the cached data
-        assert result == cached_data
+        # Verify result matches the cached PaginatedTaskResponse
+        assert len(result.items) == 1
+        assert result.items[0].id == 1
+        assert result.items[0].title == "Cached Task"
+        assert not result.items[0].completed
+        assert result.items[0].priority == "medium"
+        assert result.total == cached_data["total"]
+        assert result.limit == cached_data["limit"]
+        assert result.offset == cached_data["offset"]
 
         # Verify cache set was NOT called (we had a hit)
         mock_cache.set.assert_not_called()
