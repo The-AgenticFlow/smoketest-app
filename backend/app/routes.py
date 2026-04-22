@@ -3,9 +3,12 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import func, select
 
+from app.cache import cache
 from app.models import Task
 
 router = APIRouter()
+
+CACHE_KEY_TASKS_ALL = "tasks:all"
 
 
 class TaskCreate(BaseModel):
@@ -48,6 +51,16 @@ async def list_tasks(
 ):
     from app.main import app
 
+    # Build cache key based on filter parameters
+    cache_key = f"{CACHE_KEY_TASKS_ALL}:{completed}:{priority}:{limit}:{offset}"
+
+    # Check cache first
+    cached = await cache.get(cache_key)
+    if cached is not None:
+        # Return cached data directly
+        return PaginatedTaskResponse(**cached)
+
+    # Cache miss - fetch from database
     async with app.state.db_session() as session:
         # Build base query
         query = select(Task).order_by(Task.id)
@@ -68,12 +81,16 @@ async def list_tasks(
         result = await session.execute(query)
         items = result.scalars().all()
 
-        return PaginatedTaskResponse(
+        response = PaginatedTaskResponse(
             items=items,
             total=total,
             limit=limit,
             offset=offset
         )
+
+        # Cache the response
+        await cache.set(cache_key, response.model_dump(), ttl=300)
+        return response
 
 
 @router.post("/tasks", response_model=TaskResponse, status_code=201)
@@ -90,6 +107,8 @@ async def create_task(payload: TaskCreate):
         session.add(task)
         await session.commit()
         await session.refresh(task)
+        # Invalidate cache after creating task
+        await cache.delete(CACHE_KEY_TASKS_ALL)
         return task
 
 
@@ -116,6 +135,8 @@ async def update_task(task_id: int, payload: TaskUpdate):
             setattr(task, field, value)
         await session.commit()
         await session.refresh(task)
+        # Invalidate cache after updating task
+        await cache.delete(CACHE_KEY_TASKS_ALL)
         return task
 
 
@@ -129,3 +150,6 @@ async def delete_task(task_id: int):
             raise HTTPException(status_code=404, detail="Task not found")
         await session.delete(task)
         await session.commit()
+        # Invalidate cache after deleting task
+        await cache.delete(CACHE_KEY_TASKS_ALL)
+        return None
