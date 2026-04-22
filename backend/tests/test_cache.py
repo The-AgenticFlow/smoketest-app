@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.cache import CacheBackend
+from app.routes import CACHE_KEY_TASKS_ALL, list_tasks
 
 
 @pytest.fixture
@@ -161,8 +162,22 @@ class TestCacheIntegration:
     """Test cache integration with route scenarios."""
 
     @pytest.mark.anyio
-    @patch("app.cache.redis.from_url")
-    async def test_list_tasks_caches_result(self, mock_from_url):
-        """Test that list_tasks uses cache after first call."""
-        # This will be tested after routes are updated
-        pass  # Placeholder - routes not yet integrated
+    @patch("app.routes.cache")
+    async def test_list_tasks_uses_cache_on_hit(self, mock_cache):
+        """Test that list_tasks returns cached data when available."""
+        # Setup mock cache with data
+        cached_data = [{"id": 1, "title": "Cached Task", "completed": False, "priority": "medium"}]
+        mock_cache.get = AsyncMock(return_value=cached_data)
+        mock_cache.set = AsyncMock(return_value=True)
+
+        # Call list_tasks - should return cached data without hitting DB
+        result = await list_tasks()
+
+        # Verify cache was checked
+        mock_cache.get.assert_called_once_with(CACHE_KEY_TASKS_ALL)
+
+        # Verify result is the cached data
+        assert result == cached_data
+
+        # Verify cache set was NOT called (we had a hit)
+        mock_cache.set.assert_not_called()

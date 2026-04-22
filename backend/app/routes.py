@@ -110,3 +110,4 @@ async def delete_task(task_id: int):
         await session.commit()
         # Invalidate cache after deleting task
         await cache.delete(CACHE_KEY_TASKS_ALL)
+        return None
