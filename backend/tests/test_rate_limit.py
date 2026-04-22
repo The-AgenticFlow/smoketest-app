@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
@@ -250,6 +251,7 @@ class TestMainAppIntegration:
         """Test that main app has rate limiting middleware configured."""
         # Import fresh to ensure we're checking the actual main.py
         import importlib
+
         import app.main
         importlib.reload(app.main)
         from app.main import app
@@ -266,9 +268,8 @@ class TestMainAppIntegration:
     @pytest.mark.anyio
     async def test_health_endpoint_in_main_app(self, mock_redis_client):
         """Test that /health is accessible and exempt."""
-        import importlib
-        import app.middleware
         import app.main
+        import app.middleware
 
         # Import main app (middleware already configured with real Redis)
         from app.main import app

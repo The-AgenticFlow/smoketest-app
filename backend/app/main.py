@@ -5,9 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import settings
+from app.middleware import RateLimitMiddleware
 from app.models import Base
 from app.routes import router
-from app.middleware import RateLimitMiddleware
 
 
 @asynccontextmanager

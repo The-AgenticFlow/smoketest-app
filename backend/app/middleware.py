@@ -1,6 +1,5 @@
-import time
 import logging
-from typing import Optional
+import time
 
 import redis.asyncio as redis
 from fastapi import Request, Response
@@ -35,11 +34,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             settings, 'rate_limit_per_minute', 100
         )
         self.exempt_paths = exempt_paths or ['/health']
-        self._redis_client: Optional[redis.Redis] = redis_client
+        self._redis_client: redis.Redis | None = redis_client
         self._window_size = 60  # 60 seconds window
         self._init_complete = False
 
-    async def _get_redis_client(self) -> Optional[redis.Redis]:
+    async def _get_redis_client(self) -> redis.Redis | None:
         """Get or create Redis client."""
         if self._redis_client is None and not self._init_complete:
             self._init_complete = True
@@ -51,7 +50,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return self._redis_client
 
     def _get_client_identifier(self, request: Request) -> str:
-        """Extract client identifier from request (prefer X-Forwarded-For, fallback to client host)."""
+        """Extract client identifier (prefer X-Forwarded-For, fallback to client host)."""
         forwarded_for = request.headers.get('X-Forwarded-For')
         if forwarded_for:
             # Take the first IP in the chain (original client)
