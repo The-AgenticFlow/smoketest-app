@@ -78,7 +78,7 @@ describe("TaskList", () => {
 
   it("renders ul with task-list class", () => {
     const { container } = render(
-      <TaskList tasks={[]} onToggle={vi.fn()} onDelete={vi.fn()} />
+      <TaskList tasks={mockTasks} onToggle={vi.fn()} onDelete={vi.fn()} />
     );
     const list = container.querySelector("ul.task-list");
     expect(list).toBeInTheDocument();
