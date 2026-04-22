@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -11,7 +11,7 @@ _security_dep = Depends(security)
 
 
 def create_token(user_id: int, role: str = "user") -> str:
-    expiry = datetime.now(timezone.utc) + timedelta(hours=24)
+    expiry = datetime.now(UTC) + timedelta(hours=24)
     payload = {"sub": str(user_id), "role": role, "exp": expiry}
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
