@@ -1,5 +1,11 @@
 import { create } from "zustand";
-import { fetchTasks as apiFetch, createTask, updateTask, deleteTask } from "./api";
+import {
+  fetchTasks as apiFetch,
+  createTask,
+  updateTask,
+  deleteTask,
+  TaskFilterParams
+} from "./api";
 
 export interface Task {
   id: number;
@@ -11,9 +17,10 @@ export interface Task {
 
 interface TaskState {
   tasks: Task[];
+  total: number;  // Track total count for pagination UI
   loading: boolean;
   error: string | null;
-  fetchTasks: () => Promise<void>;
+  fetchTasks: (filters?: TaskFilterParams) => Promise<void>;
   addTask: (title: string) => Promise<void>;
   toggleTask: (id: number) => Promise<void>;
   deleteTask: (id: number) => Promise<void>;
@@ -21,14 +28,19 @@ interface TaskState {
 
 export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: [],
+  total: 0,
   loading: false,
   error: null,
 
-  fetchTasks: async () => {
+  fetchTasks: async (filters?: TaskFilterParams) => {
     set({ loading: true, error: null });
     try {
-      const tasks = await apiFetch();
-      set({ tasks, loading: false });
+      const response = await apiFetch(filters);
+      set({
+        tasks: response.items,  // Extract items from paginated response
+        total: response.total,  // Store total count
+        loading: false
+      });
     } catch (err) {
       set({ error: String(err), loading: false });
     }

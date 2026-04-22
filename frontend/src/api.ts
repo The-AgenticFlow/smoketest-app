@@ -21,6 +21,20 @@ export interface TaskResponse {
   priority: string;
 }
 
+export interface TaskFilterParams {
+  completed?: boolean;
+  priority?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface PaginatedTasksResponse {
+  items: TaskResponse[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const resp = await fetch(`${BASE_URL}${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -33,8 +47,28 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return resp.json();
 }
 
-export async function fetchTasks(): Promise<TaskResponse[]> {
-  return request<TaskResponse[]>("/tasks");
+export async function fetchTasks(
+  filters?: TaskFilterParams
+): Promise<PaginatedTasksResponse> {
+  // Build query string from filters
+  const params = new URLSearchParams();
+  if (filters?.completed !== undefined) {
+    params.append("completed", String(filters.completed));
+  }
+  if (filters?.priority !== undefined) {
+    params.append("priority", filters.priority);
+  }
+  if (filters?.limit !== undefined) {
+    params.append("limit", String(filters.limit));
+  }
+  if (filters?.offset !== undefined) {
+    params.append("offset", String(filters.offset));
+  }
+
+  const queryString = params.toString();
+  const path = queryString ? `/tasks?${queryString}` : "/tasks";
+
+  return request<PaginatedTasksResponse>(path);
 }
 
 export async function createTask(payload: TaskPayload): Promise<TaskResponse> {
