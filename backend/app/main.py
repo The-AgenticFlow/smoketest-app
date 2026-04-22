@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import settings
+from app.middleware import RateLimitMiddleware
 from app.models import Base
 from app.routes import router
 
@@ -23,6 +24,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="SmokeTest API", version="0.1.0", lifespan=lifespan)
+
+# Add rate limiting middleware first (before CORS)
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=settings.rate_limit_per_minute,
+)
 
 app.add_middleware(
     CORSMiddleware,
