@@ -134,7 +134,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             retry_after = max(1, reset_time - int(time.time()))
 
             response = Response(
-                content='{"detail": "Rate limit exceeded"}',
+                content=f'{{"detail": "Rate limit exceeded", "retry_after": {retry_after}}}',
                 status_code=429,
                 headers={
                     'Content-Type': 'application/json',
