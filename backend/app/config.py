@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     secret_key: str = "dev-secret-change-in-prod"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    rate_limit_per_minute: int = 100
 
     model_config = {"env_file": ".env"}
 

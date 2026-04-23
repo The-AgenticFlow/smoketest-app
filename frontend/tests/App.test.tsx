@@ -3,7 +3,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import App from "../src/App";
 
 vi.mock("../src/api", () => ({
-  fetchTasks: vi.fn().mockResolvedValue([]),
+  fetchTasks: vi.fn().mockResolvedValue({
+    items: [],
+    total: 0,
+    limit: 50,
+    offset: 0,
+  }),
   createTask: vi.fn().mockResolvedValue({
     id: 1,
     title: "Test",

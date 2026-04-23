@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useTaskStore } from "./store";
+import TaskList from "./components/TaskList";
 
 export default function App() {
   const { tasks, loading, error, fetchTasks, addTask, toggleTask, deleteTask } =
@@ -29,14 +30,7 @@ export default function App() {
         <input name="title" placeholder="New task..." />
         <button type="submit">Add</button>
       </form>
-      <ul className="task-list">
-        {tasks.map((task) => (
-          <li key={task.id} className={task.completed ? "completed" : ""}>
-            <span onClick={() => toggleTask(task.id)}>{task.title}</span>
-            <button onClick={() => deleteTask(task.id)}>x</button>
-          </li>
-        ))}
-      </ul>
+      <TaskList tasks={tasks} onToggle={toggleTask} onDelete={deleteTask} />
     </div>
   );
 }

@@ -1,9 +1,7 @@
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.main import app
 from app.models import Base
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_tasks.db"
@@ -38,13 +36,13 @@ def anyio_backend():
 async def client(db_session):
     from app.main import app as fastapi_app
 
-    fastapi_app.state.db_session = lambda: _session_context(db_session)
+    fastapi_app.state.db_session = lambda: SessionContext(db_session)
     transport = ASGITransport(app=fastapi_app)
     async with AsyncClient(transport=transport, base_url="http://test") as c:
         yield c
 
 
-class _session_context:
+class SessionContext:
     def __init__(self, session):
         self._session = session
 

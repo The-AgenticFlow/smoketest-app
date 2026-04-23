@@ -9,3 +9,5 @@ dist/
 .ruff_cache/
 .claude/
 .env.local
+.venv/
+venv/
